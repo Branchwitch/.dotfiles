@@ -21,7 +21,7 @@
       damage_tracking = 0
     } 
   ";
-  defaultWallpaper = "hollow-knight.png";
+  defaultWallpaper = "garfield-odie.jpg";
 
   theme = "catppuccin-mocha";
 
