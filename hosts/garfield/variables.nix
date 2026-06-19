@@ -4,23 +4,13 @@
   gitEmail = "31701136+658060@users.noreply.github.com";
 
   # Hyprland Settings
-  extraMonitorSettings = "
-    monitor = DP-1, 2560x1440@144, auto, auto
-    monitor = DP-3, 1920x1080@144, auto-right, auto
-  ";
-  extraHardwareSettings = "
-    opengl {
-      nvidia_anti_flicker = 0
-    }
-
-    misc {
-      vfr = 0
-    }
-
-    debug {
-      damage_tracking = 0
-    } 
-  ";
+  extraMonitorSettings = [
+    { output = "HDMI-A-2"; mode = "3840x2160@30"; position = "auto"; scale = "2"; }
+  ];
+  extraHardwareSettings = {
+    opengl = { nvidia_anti_flicker = 0; };
+    debug  = { damage_tracking = 0; };
+  };
   defaultWallpaper = "garfield-odie.jpg";
 
   theme = "catppuccin-mocha";
