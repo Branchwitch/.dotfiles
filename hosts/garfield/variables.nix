@@ -1,7 +1,10 @@
 {
+  profile = "nvidia";
+  user = "cedar";
+
   # Git Configuration ( For Pulling Software Repos )
-  gitUsername = "658060";
-  gitEmail = "31701136+658060@users.noreply.github.com";
+  gitUsername = "Branchwitch";
+  gitEmail = "284467481+Branchwitch@users.noreply.github.com";
 
   # Hyprland Settings
   extraMonitorSettings = [
@@ -26,24 +29,7 @@
   clock24h = true;
 
   # variables which toggle packages
-  gamedev = true;
   gaming = true;
-  texlive = false;
-  silly = true;
-
-  # Program Options
-  browser = "zen"; # Set Default Browser (google-chrome-stable for google-chrome)
-  terminal = "kitty"; # Set Default System Terminal
-  keyboardLayout = "";
-  consoleKeyMap = "us";
-
-  editor = "nvim";
-  EDITOR = "nvim";
-  VISUAL = "nvim";
-
-  # For Nvidia Prime support
-  intelID = "PCI:1:0:0";
-  nvidiaID = "PCI:0:2:0";
 
   # Enable NFS
   enableNFS = true;
