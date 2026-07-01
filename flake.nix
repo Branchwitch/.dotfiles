@@ -6,7 +6,8 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     nur.url = "github:nix-community/NUR";
     nvf.url = "github:notashelf/nvf";
     quickshell = {
@@ -19,14 +20,20 @@
       flake = false;
     };
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = {nixpkgs, ...} @ inputs: let
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
     system = "x86_64-linux";
-    # leaving these empty in the repo to keep conflicts between machines away.
-    host = "";
-    profile = "";
-    username = "";
+    inherit (nixpkgs) lib;
+    pkgs = nixpkgs.legacyPackages.${system};
 
     overlays = [
       (final: prev: {
@@ -36,85 +43,53 @@
         });
       })
     ];
+
+    # Auto-discover every host directory under ./hosts and build one
+    # nixosConfiguration per hostname. Each host's variables.nix names its own
+    # `profile` (driver bundle) and `user` (identity), so flake.nix is never
+    # edited per-machine — adding a device is just dropping in hosts/<name>/.
+    # Build with `--hostname $(hostname)` (see the fr/fu aliases).
+    hosts = builtins.attrNames (
+      lib.filterAttrs (_: type: type == "directory") (builtins.readDir ./hosts)
+    );
+
+    mkHost = host: let
+      vars = import ./hosts/${host}/variables.nix;
+    in lib.nixosSystem {
+      inherit system;
+      specialArgs = {
+        inherit inputs host;
+        inherit (vars) profile;
+        username = vars.user;
+      };
+      modules = [
+        ./profiles/${vars.profile}
+        {nixpkgs.overlays = overlays;}
+      ];
+    };
   in {
-    nixosConfigurations = {
-      amd = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/amd
-          {nixpkgs.overlays = overlays;}
-        ];
+    nixosConfigurations = lib.genAttrs hosts mkHost;
+
+    # dev tooling: a self-installing commit-msg hook enforcing conventional
+    # commits. Activated by `.envrc` (`use flake`) via direnv.
+    # one `direnv allow` per clone. cocogitto also renders CHANGELOG.md.
+    checks.${system}.pre-commit = inputs.git-hooks.lib.${system}.run {
+      src = ./.;
+      hooks.cog = {
+        enable = true;
+        name = "cocogitto conventional-commit check";
+        entry = "${pkgs.cocogitto}/bin/cog verify --file";
+        language = "system";
+        stages = ["commit-msg"];
+        pass_filenames = true;
       };
-      nvidia = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/nvidia
-          {nixpkgs.overlays = overlays;}
-        ];
-      };
-      nvidia-laptop = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/nvidia-laptop
-          {nixpkgs.overlays = overlays;}
-        ];
-      };
-      intel = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/intel
-        ];
-      };
-      vm = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/vm
-          {nixpkgs.overlays = overlays;}
-        ];
-      };
-      iso = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-          inherit username;
-          inherit host;
-          inherit profile;
-        };
-        modules = [
-          ./profiles/iso
-          {nixpkgs.overlays = overlays;}
-        ];
-      };
+    };
+
+    devShells.${system}.default = pkgs.mkShell {
+      inherit (self.checks.${system}.pre-commit) shellHook;
+      buildInputs =
+        self.checks.${system}.pre-commit.enabledPackages
+        ++ [pkgs.cocogitto];
     };
   };
 }
