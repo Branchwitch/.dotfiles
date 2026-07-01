@@ -28,7 +28,7 @@
   # variables which toggle packages
   gamedev = true;
   gaming = true;
-  texlive = true;
+  texlive = false;
   silly = true;
 
   # Program Options
