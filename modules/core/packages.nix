@@ -34,12 +34,12 @@
       # customPkgs.kingler
       # customPkgs.datacorn
 
-      (agda.withPackages [
-        agdaPackages._1lab
-        agdaPackages.agda-categories
-        agdaPackages.cubical
-        agdaPackages.standard-library
-      ])
+      # (agda.withPackages [
+      #   agdaPackages._1lab
+      #   agdaPackages.agda-categories
+      #   agdaPackages.cubical
+      #   agdaPackages.standard-library
+      # ])
       # fails to build 2025-11-15
       # ardour
       brightnessctl
